@@ -293,6 +293,885 @@ Set security-association idle-time命令用于设定空闲超时计数器，范�
 
 从报文结果不难发现，AH协议只能实现验证功能，而并未提供任何形式的数据加密，而且正因为其对整个IP数据报文实现验证功能，所以他与NAT或PAT不能一起使用。
 有黑客对IP包头内容进行篡改，ESP是无法检测到的。这一点一点却使ESP可以和NAT一起共用。但是，无论是ESP还是AH都无法和PAT一起使用，这是由于PAT要修改第四层的数据包头。
+
+双网关负载均衡高可用
+gw1#show running-config 
+*Mar  1 00:02:20.607: %SYS-5-CONFIG_I: Configured from console by console
+gw1#show running-config 
+Building configuration...
+
+Current configuration : 2340 bytes
+!
+version 12.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname gw1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+no aaa new-model
+memory-size iomem 5
+no ip icmp rate-limit unreachable
+!
+!
+ip cef
+no ip domain lookup
+!
+!
+ip sla monitor 1
+ type echo protocol ipIcmpEcho 1.1.1.1 source-ipaddr 1.1.1.2
+ frequency 5
+ip sla monitor schedule 1 life forever start-time now
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip tcp synwait-time 5
+!
+track 1 rtr 1 reachability
+!         
+!
+!
+!
+!
+interface FastEthernet0/0
+ ip address 1.1.1.2 255.255.255.0
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/1
+ ip address 192.168.2.1 255.255.255.0 secondary
+ ip address 192.168.1.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/1.2
+ shutdown
+!
+interface FastEthernet1/0
+ no switchport
+ ip address 10.10.10.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+!
+interface FastEthernet1/1
+ shutdown
+!
+interface FastEthernet1/2
+ shutdown
+!
+interface FastEthernet1/3
+ shutdown
+!
+interface FastEthernet1/4
+ shutdown
+!
+interface FastEthernet1/5
+ shutdown
+!
+interface FastEthernet1/6
+ shutdown
+!         
+interface FastEthernet1/7
+ shutdown
+!
+interface FastEthernet1/8
+ shutdown
+!
+interface FastEthernet1/9
+ shutdown
+!
+interface FastEthernet1/10
+ shutdown
+!
+interface FastEthernet1/11
+ shutdown
+!
+interface FastEthernet1/12
+ shutdown
+!
+interface FastEthernet1/13
+ shutdown
+!
+interface FastEthernet1/14
+ shutdown 
+!
+interface FastEthernet1/15
+ shutdown
+!
+interface Vlan1
+ no ip address
+!
+!
+router ospf 10
+ log-adjacency-changes
+ network 10.10.10.0 0.0.0.255 area 10
+ network 192.168.1.0 0.0.0.255 area 10
+ network 192.168.2.0 0.0.0.255 area 10
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 1.1.1.1 track 1
+ip route 0.0.0.0 0.0.0.0 10.10.10.2 10
+!
+!
+ip nat inside source list inside1 interface FastEthernet0/0 overload
+!
+!         
+ip access-list extended inside1
+ permit ip 192.168.1.0 0.0.0.255 any
+ permit ip 192.168.2.0 0.0.0.255 any
+ permit ip 192.168.10.0 0.0.0.255 any
+ permit ip 192.168.3.0 0.0.0.255 any
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login
+!
+!
+end
+
+gw2#show running-config 
+Building configuration...
+
+Current configuration : 2057 bytes
+!
+version 12.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname gw2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+no aaa new-model
+memory-size iomem 5
+no ip icmp rate-limit unreachable
+!
+!
+ip cef
+no ip domain lookup
+!
+!
+ip sla monitor 2
+ type echo protocol ipIcmpEcho 2.1.1.1 source-ipaddr 2.1.1.2
+ frequency 5
+ip sla monitor schedule 2 life forever start-time now
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip tcp synwait-time 5
+!
+track 2 rtr 2 reachability
+!         
+!
+!
+!
+!
+interface FastEthernet0/0
+ ip address 2.1.1.2 255.255.255.0
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/1
+ ip address 192.168.3.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface FastEthernet1/0
+ no switchport
+ ip address 10.10.10.2 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+!
+interface FastEthernet1/1
+!
+interface FastEthernet1/2
+!
+interface FastEthernet1/3
+!
+interface FastEthernet1/4
+!
+interface FastEthernet1/5
+!
+interface FastEthernet1/6
+!
+interface FastEthernet1/7
+!
+interface FastEthernet1/8
+!
+interface FastEthernet1/9
+!
+interface FastEthernet1/10
+!
+interface FastEthernet1/11
+!         
+interface FastEthernet1/12
+!
+interface FastEthernet1/13
+!
+interface FastEthernet1/14
+!
+interface FastEthernet1/15
+!
+interface Vlan1
+ no ip address
+!
+!
+router ospf 10
+ log-adjacency-changes
+ network 10.10.10.0 0.0.0.255 area 10
+ network 192.168.3.0 0.0.0.255 area 10
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 2.1.1.1 track 2
+ip route 0.0.0.0 0.0.0.0 10.10.10.1 10
+!
+!         
+ip nat inside source list isp2 interface FastEthernet0/0 overload
+!
+!
+ip access-list extended isp2
+ permit ip 192.168.3.0 0.0.0.255 any
+ permit ip 192.168.10.0 0.0.0.255 any
+ permit ip 192.168.1.0 0.0.0.255 any
+ permit ip 192.168.2.0 0.0.0.255 any
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login
+!
+!
+end
+单网关负载均衡高可用
+gw#show running-config 
+Building configuration...
+
+Current configuration : 3312 bytes
+!
+version 12.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname gw
+!
+boot-start-marker
+boot-end-marker
+!
+!
+no aaa new-model
+memory-size iomem 5
+no ip icmp rate-limit unreachable
+!
+!
+ip cef
+no ip domain lookup
+!
+!
+ip sla monitor 1
+ type echo protocol ipIcmpEcho 1.1.1.1 source-interface FastEthernet0/0
+ timeout 1000
+ threshold 3
+ frequency 5
+ip sla monitor schedule 1 life forever start-time now
+ip sla monitor 2
+ type echo protocol ipIcmpEcho 2.1.1.1 source-interface FastEthernet0/1
+ timeout 1000
+ threshold 3
+ frequency 5
+ip sla monitor schedule 2 life forever start-time now
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!         
+!
+!
+!
+!
+ip tcp synwait-time 5
+!
+track 1 rtr 1 reachability
+!
+track 2 rtr 2 reachability
+! 
+!
+!
+!
+!
+interface FastEthernet0/0
+ ip address 1.1.1.2 255.255.255.0
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/1
+ ip address 2.1.1.2 255.255.255.0
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface FastEthernet1/0
+ no switchport
+ ip address 192.168.2.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ ip policy route-map load
+!
+interface FastEthernet1/1
+ no switchport
+ ip address 192.168.0.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ ip policy route-map load
+!
+interface FastEthernet1/2
+!
+interface FastEthernet1/3
+!         
+interface FastEthernet1/4
+!
+interface FastEthernet1/5
+!
+interface FastEthernet1/6
+!
+interface FastEthernet1/7
+!
+interface FastEthernet1/8
+!
+interface FastEthernet1/9
+!
+interface FastEthernet1/10
+!
+interface FastEthernet1/11
+!
+interface FastEthernet1/12
+!
+interface FastEthernet1/13
+!
+interface FastEthernet1/14
+!
+interface FastEthernet1/15
+!
+interface Vlan1
+ no ip address
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 1.1.1.1
+ip route 0.0.0.0 0.0.0.0 2.1.1.1
+!
+!
+ip nat inside source route-map nat1 interface FastEthernet0/0 overload
+ip nat inside source route-map nat11 interface FastEthernet0/1 overload
+ip nat inside source route-map nat2 interface FastEthernet0/1 overload
+ip nat inside source route-map nat22 interface FastEthernet0/0 overload
+!
+!
+ip access-list extended isp1
+ permit ip any 1.1.1.0 0.0.0.255
+ permit ip any 114.114.114.0 0.0.0.255
+ permit ip any 202.96.209.0 0.0.0.255
+ permit ip any 6.6.6.0 0.0.0.255
+ip access-list extended isp2
+ permit ip any 8.8.8.0 0.0.0.255
+ permit ip any 4.4.4.0 0.0.0.255
+ permit ip any 2.1.1.0 0.0.0.255
+!
+route-map load permit 10
+ match ip address isp1
+ set ip next-hop verify-availability 1.1.1.1 1 track 1
+ set ip next-hop verify-availability 2.1.1.1 2 track 2
+!
+route-map load permit 20
+ match ip address isp2
+ set ip next-hop verify-availability 2.1.1.1 1 track 2
+ set ip next-hop verify-availability 1.1.1.1 2 track 1
+!
+route-map nat2 permit 10
+ match ip address isp2
+ match interface FastEthernet0/1
+!
+route-map nat1 permit 10
+ match ip address isp1
+ match interface FastEthernet0/0
+!
+route-map nat11 permit 10
+ match ip address isp1
+ match interface FastEthernet0/1
+!
+route-map nat22 permit 10
+ match ip address isp2
+ match interface FastEthernet0/0
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login
+!
+!
+end
+
+###Real VPN
+
+!
+! Last configuration change at 07:13:33 UTC Tue Sep 5 2017
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname office-router
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable password cisco!@#a123
+!
+no aaa new-model
+!
+ip cef
+!
+!
+!
+!
+!
+!
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+license udi pid CISCO2921/K9 sn FGL183911HQ
+!
+!
+!
+redundancy
+!
+!
+!
+!
+!
+! 
+!
+crypto isakmp policy 10		//第一阶段IKE
+ encr 3des	//加密算法
+ hash md5	//完整校验算法
+ authentication pre-share    //身份认证方式（预共享密钥，证书认证）
+ group 2     //密钥管理
+ lifetime 28800   //生命周期
+crypto isakmp key wandian address 114.80.89.34    //设置对端共享密钥
+crypto isakmp key wandian address 122.226.124.58  //设置对端共享密钥
+!
+!
+crypto ipsec transform-set VPN12 esp-3des esp-md5-hmac  //第二阶段ipsec，设置转换集为VPN12,加密算法，完整校验算法
+ mode tunnel 	//设置传输方式（这里为私网访问方式为隧道模式，还有一种公网访问方式为传输模式）
+!
+!
+!
+crypto map vpn local-address GigabitEthernet0/1 //设置加密图，名字为vpn,本端vpn ip为GE0/1口
+crypto map vpn 10 ipsec-isakmp 	//加密图vpn调用第一阶段和第二阶段
+ set peer 114.80.89.34	//设置对端公网IP
+ set peer 122.226.124.58	//设置对端公网IP
+ set security-association lifetime kilobytes 86400	//设置安全生命周期传输有效数据包
+ set security-association lifetime seconds 86400	//设置安全生命周期有效时间
+ set transform-set VPN12 	//设置转换集为之前设置好的VPN12（调用转换集）
+ set pfs group1		//设置密钥管理版本
+ match address 120	//匹配访问控制列表120
+!
+!
+!
+!
+!
+interface Embedded-Service-Engine0/0
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ ip address 180.168.251.178 255.255.255.248
+ no ip redirects
+ no ip proxy-arp
+ ip nat outside
+ ip virtual-reassembly in
+ duplex auto
+ speed auto
+ crypto map vpn 	//调用并启用vpn
+!
+interface GigabitEthernet0/2
+ ip address 192.168.1.1 255.255.255.0
+ no ip redirects
+ no ip proxy-arp
+ ip nat inside
+ ip virtual-reassembly in
+ duplex auto
+ speed auto
+!
+ip forward-protocol nd
+!
+ip http server
+no ip http secure-server
+!
+ip nat pool hasco 180.168.251.178 180.168.251.182 netmask 255.255.255.248
+ip nat inside source list 101 interface GigabitEthernet0/1 overload
+ip nat inside source static tcp 192.168.1.221 21 180.168.251.178 21 extendable
+ip nat inside source static tcp 192.168.1.155 22 180.168.251.178 22 extendable
+ip nat inside source static tcp 192.168.1.155 80 180.168.251.178 80 extendable
+ip nat inside source static tcp 192.168.1.221 8080 180.168.251.178 8080 extendable
+ip nat inside source static tcp 192.168.1.222 3389 180.168.251.178 9753 extendable
+ip nat inside source static tcp 192.168.1.221 3389 180.168.251.178 9876 extendable
+ip nat inside source static tcp 192.168.1.223 3389 180.168.251.179 9876 extendable
+ip route 0.0.0.0 0.0.0.0 180.168.251.177
+ip route 192.168.1.0 255.255.255.0 192.168.1.254
+ip route 192.168.2.0 255.255.255.0 192.168.1.254
+!
+access-list 101 deny   ip 192.168.1.0 0.0.0.255 192.168.10.0 0.0.0.255
+access-list 101 deny   ip 192.168.2.0 0.0.0.255 192.168.10.0 0.0.0.255
+access-list 101 deny   ip 192.168.1.0 0.0.0.255 192.168.70.0 0.0.0.255
+access-list 101 deny   ip 192.168.2.0 0.0.0.255 192.168.70.0 0.0.0.255
+access-list 101 deny   ip 192.168.1.0 0.0.0.255 192.168.80.0 0.0.0.255
+access-list 101 deny   ip 192.168.2.0 0.0.0.255 192.168.80.0 0.0.0.255
+access-list 101 permit ip 192.168.1.0 0.0.0.255 any
+access-list 101 permit ip 192.168.2.0 0.0.0.255 any
+access-list 120 permit ip 192.168.1.0 0.0.0.255 192.168.10.0 0.0.0.255
+access-list 120 permit ip 192.168.2.0 0.0.0.255 192.168.10.0 0.0.0.255
+access-list 120 permit ip 192.168.1.0 0.0.0.255 192.168.70.0 0.0.0.255
+access-list 120 permit ip 192.168.2.0 0.0.0.255 192.168.70.0 0.0.0.255
+access-list 120 permit ip 192.168.1.0 0.0.0.255 192.168.80.0 0.0.0.255
+access-list 120 permit ip 192.168.2.0 0.0.0.255 192.168.80.0 0.0.0.255
+!
+!
+!
+control-plane
+!
+!
+!
+line con 0
+line aux 0
+line 2
+ no activation-character
+ no exec
+ transport preferred none
+ transport output pad telnet rlogin lapb-ta mop udptn v120 ssh
+ stopbits 1
+line vty 0 4
+ password cisco!@#
+ login
+ transport input all
+!
+scheduler allocate 20000 1000
+!
+end
+
+##Real Switch
+
+!
+version 12.2
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Switch
+!
+boot-start-marker
+boot-end-marker
+!
+enable password cisco
+!
+!
+!
+no aaa new-model
+switch 1 provision ws-c3750x-24
+system mtu routing 1500
+ip routing
+!
+ip dhcp pool vlan1
+   network 192.168.1.0 255.255.255.0
+   default-router 192.168.1.254 
+   dns-server 180.168.255.118 202.96.209.5 
+!
+ip dhcp pool vlan2
+   network 192.168.2.0 255.255.255.0
+   default-router 192.168.2.254 
+   dns-server 180.168.255.118 202.96.209.5 
+!
+!
+!
+!
+crypto pki trustpoint TP-self-signed-3869983360
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-3869983360
+ revocation-check none
+ rsakeypair TP-self-signed-3869983360
+!
+!
+crypto pki certificate chain TP-self-signed-3869983360
+ certificate self-signed 01
+  3082023F 308201A8 A0030201 02020101 300D0609 2A864886 F70D0101 04050030 
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274 
+  69666963 6174652D 33383639 39383333 3630301E 170D3933 30333031 30303031 
+  32325A17 0D323030 31303130 30303030 305A3031 312F302D 06035504 03132649 
+  4F532D53 656C662D 5369676E 65642D43 65727469 66696361 74652D33 38363939 
+  38333336 3030819F 300D0609 2A864886 F70D0101 01050003 818D0030 81890281 
+  8100E81C FE06F8AA 649D7262 2544E19F E78E6660 FD755C26 2230AB54 ADCB5022 
+  75FFA819 DD24FCDC E9912485 810DBD72 2C95569A 4529E48B 4B8B7D95 2A9A5CA1 
+  422E3616 25863340 9C2C7BF3 DF247636 FEC22115 6CE2AF7F E7E0042D 1D05EEE9 
+  3B36EFDD F99D7717 EE042DF2 67B46461 98C7F15C 0E8A46F8 BA7C2191 A5ABDD65 
+  0C010203 010001A3 67306530 0F060355 1D130101 FF040530 030101FF 30120603 
+  551D1104 0B300982 07537769 7463682E 301F0603 551D2304 18301680 14209649 
+  A761328C A5E73509 427853D1 63431560 9A301D06 03551D0E 04160414 209649A7 
+  61328CA5 E7350942 7853D163 4315609A 300D0609 2A864886 F70D0101 04050003 
+  8181002B 7467E929 049BA69D 883069B0 EA48F383 87AE7612 BBAF1990 C8E2E2A7 
+  8E5489D7 472AF53A 22874A99 38C9CC04 3A47FC91 A3FAA843 181BC8BF 75FE2EDA 
+  06435F88 A22E9967 42397AF2 CA8DA948 4F3C9A05 14115918 4BA365D8 A705C028 
+  F4CC6487 D8D86B74 C1A5523B 1A0C4FB9 EBC6C469 517371CD B1AF7A6D 5D4E947F D6E6F1
+  quit
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+!
+!
+!
+vlan internal allocation policy ascending
+!
+!
+!
+interface FastEthernet0
+ no ip address
+ no ip route-cache cef
+ no ip route-cache
+ no ip mroute-cache
+ shutdown
+!
+interface GigabitEthernet1/0/1
+ spanning-tree portfast
+!
+interface GigabitEthernet1/0/2
+ switchport mode access
+!
+interface GigabitEthernet1/0/3
+ switchport mode access
+!
+interface GigabitEthernet1/0/4
+ switchport mode access
+!
+interface GigabitEthernet1/0/5
+ switchport mode access
+!
+interface GigabitEthernet1/0/6
+ switchport mode access
+!
+interface GigabitEthernet1/0/7
+ switchport mode access
+!
+interface GigabitEthernet1/0/8
+ switchport mode access
+!
+interface GigabitEthernet1/0/9
+ switchport mode access
+!
+interface GigabitEthernet1/0/10
+ switchport mode access
+!
+interface GigabitEthernet1/0/11
+ switchport mode access
+!
+interface GigabitEthernet1/0/12
+ switchport mode access
+!
+interface GigabitEthernet1/0/13
+ switchport mode access
+!
+interface GigabitEthernet1/0/14
+ switchport mode access
+!
+interface GigabitEthernet1/0/15
+ switchport mode access
+!
+interface GigabitEthernet1/0/16
+ switchport mode access
+!
+interface GigabitEthernet1/0/17
+ switchport mode access
+!
+interface GigabitEthernet1/0/18
+ switchport mode access
+!
+interface GigabitEthernet1/0/19
+ switchport mode access
+!
+interface GigabitEthernet1/0/20
+ switchport mode access
+!
+interface GigabitEthernet1/0/21
+ switchport mode access
+!
+interface GigabitEthernet1/0/22
+ switchport mode access
+!
+interface GigabitEthernet1/0/23
+ switchport access vlan 2
+ switchport mode access
+!
+interface GigabitEthernet1/0/24
+ switchport access vlan 2
+ switchport mode access
+!
+interface GigabitEthernet1/1/1
+!
+interface GigabitEthernet1/1/2
+!
+interface GigabitEthernet1/1/3
+!
+interface GigabitEthernet1/1/4
+!
+interface TenGigabitEthernet1/1/1
+!
+interface TenGigabitEthernet1/1/2
+!
+interface Vlan1
+ ip address 192.168.1.254 255.255.255.0
+!
+interface Vlan2
+ ip address 192.168.2.254 255.255.255.0
+!
+ip default-gateway 192.168.1.1
+ip classless
+ip route 0.0.0.0 0.0.0.0 192.168.1.1
+ip http server
+ip http secure-server
+!
+!
+!
+line con 0
+line vty 0 4
+ password cisco
+ login
+line vty 5 15
+ login
+!
+end
+
 </pre>
  
 
