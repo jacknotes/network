@@ -1,0 +1,22 @@
+core1:    
+ip sla 10
+ icmp-echo 114.114.114.114 source-ip 192.168.10.254
+ timeout 1000
+ threshold 3
+ frequency 5
+ip sla schedule 10 life forever start-time now
+track 10 ip sla 10 reachability
+
+interface Vlan10
+  ip address 192.168.10.253 255.255.255.0
+  standby 10 ip 192.168.10.254
+  standby 10 priority 120
+ standby 10 preempt
+ standby 10 track 10 decrement 30
+
+core2:
+interface Vlan10
+  ip address 192.168.10.252 255.255.255.0
+  standby 10 ip 192.168.10.254
+  standby 10 priority 100
+ standby 10 preempt

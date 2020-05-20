@@ -1,0 +1,36 @@
+Cisco端口镜像叫Switched Port Analyzer,简称SPAN,端口镜像仅适用于以太网交换端口
+Cisco的SAPN分为三种：
+	SPAN:是指源和目的端口都在同一台机器上
+	RSPAN:指目的和源不在同一交换机上
+	VSPAN:是镜像整个或数个VLAN到一个目的端口(在配置SPAN的时候，需要提供源端口或VLAN号以及目标端口)
+SPAN镜像配置 :
+①以本次配合测试，使用的Cisco 3750为案例，将端口3镜像到端口2               
+配置镜像源，可以是端口或者Vlan，本次以端口为准
+Switch(config)#monitor session 1 source interface gigabitEthernet 1/0/3 both
+配置镜像目的端口
+Switch(config)#monitor session 1 destination interface gigabitEthernet 1/0/2
+#目标端口不能上网，只能获取流量。
+查看配置结果
+Switch#show monitor
+
+VSPAN:
+配置镜像源，可以是端口或者Vlan，本次以端口为准
+Switch(config)#monitor session 2 source vlan 101 -102 both
+配置镜像目的端口
+Switch(config)#monitor session 2 destination interface gigabitEthernet 1/0/2
+#目标端口不能上网，只能获取流量。
+Switch#show monitor ses 2
+
+RSPAN镜像配置:
+RSPAN的Session分成RSPAN Source Session和RSPAN Destination Session两部份，所以，相应的配置也要分别在session的原和目的交换机上做。
+①其他思科系列交换机举例
+1）3550 IOS交换机:
+3550(config)#vlan 900   //建立RSPAN VLAN
+3550(config-vlan)#remote-span #开启remote vlan模式
+monitor session 1 remote   //源交换机，此命令可要可不要
+monitor session 1 source interface fastethernet 0/17 -19 both  //源端口
+monitor session 1 source interface fastethernet 0/24 both  //源端口
+monitor session 1 destination remote vlan 900 reflector-port fastethernet 0/20  //目标RSPAN VLAN，fastethernet 0/20这个端口用来把流量反射到RSPAN VLAN里，将报文在远程镜像VLAN内广播。如果不写反射端口，远端主机就无法收到镜像的报文。 
+monitor session 1 remote  //目标交换机，此命令可要可不要
+monitor session 1 source remote vlan 900  //RSPAN VLAN
+monitor session 1 destination interface fastethernet 0/19//目标端口 
