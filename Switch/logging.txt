@@ -1,0 +1,11 @@
+#enable log to rsyslog server
+logging on
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+logging facility local7
+logging trap debugging
+logging source-interface Vlan30
+logging 192.168.13.50
+#set Beijing Time
+SWI_CORE02(config)#clock timezone GMT +8
+SWI_CORE02#clock set 20:22:00 03 Dec 2020
