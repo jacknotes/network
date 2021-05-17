@@ -33,5 +33,17 @@ route-map ipTOtelecom deny 20
 应该配置链路状态健康检测。
 
 
+--Cisco 3750
+SWI_CORE01(config)#ip sla 10 
+SWI_CORE01(config-ip-sla)#icmp-echo 192.168.10.253 source-ip 192.168.10.252 
+SWI_CORE01(config-ip-sla-echo)#timeout 1000
+SWI_CORE01(config-ip-sla-echo)#threshold 3 
+SWI_CORE01(config-ip-sla-echo)#frequency 5
+SWI_CORE01(config)#ip sla schedule 10 life forever start-time now 
+SWI_CORE01(config)#track 10 ip sla 10 reachability 
+SWI_CORE01#show track brief       
+10      ip sla    10                   reachability     Up  
+
+
 
 
