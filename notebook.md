@@ -13,6 +13,16 @@ route-map ipTOtelecom permit 10
  match ip address ipTOtelecom
  set ip next-hop verify-availability 192.168.2.2 1 track 1
  set ip next-hop 192.168.1.1
+--需要先开启routing模式，配置完并reload重启
+show sdm prefer                 
+  The current template is "desktop routing" template. 
+sdm prefer routing
+reload
+--进行接口配置 
+interface vlan 10
+  ip policy route-map ipTOtelecom
+
+
 
 默认会添加一条拒绝所有未匹配的条目
 route-map ipTOtelecom deny 20 
