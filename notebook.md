@@ -1,3 +1,4 @@
+<pre>
 --新建“响应时间报告器”
 ip sla monitor 1
  type echo protocol ipIcmpEcho 192.168.2.2 source-interface FastEthernet1/0
@@ -22,8 +23,6 @@ reload
 interface vlan 10
   ip policy route-map ipTOtelecom
 
-
-
 默认会添加一条拒绝所有未匹配的条目
 route-map ipTOtelecom deny 20 
 注：当其它没有匹配到地址列表ipTOtelecom时将走默认路由。就像全局视图下没有配置策略路由时走静态路由表。此结论经过论证
@@ -45,5 +44,22 @@ SWI_CORE01#show track brief
 10      ip sla    10                   reachability     Up  
 
 
+--cisco 3740E #20210818
+----配置vlan之间隔离
+1. 配置访问控制列表，设置允许的条目
+SWI_CORE01(config)#ip access-list extended denyVLAN70
+SWI_CORE01(config-ext-nacl)#10 permit ip 192.168.17.0 0.0.0.255 192.168.10.0 0.0.0.255
+2. 配置vlan策略，最后必须设定一条允许所有规则
+SWI_CORE01(config)#vlan access-map denyVLAN70 10
+SWI_CORE01(config-access-map)#match ip address denyVLAN70
+SWI_CORE01(config-access-map)#action drop
+SWI_CORE01(config)#vlan access-map denyVLAN70 20
+SWI_CORE01(config-access-map)#action forward
+3. 设置vlan策略使用升序顺序执行
+SWI_CORE01(config)#vlan internal allocation policy ascending
+4. 应用规则denyVLAN70到vlan 70
+SWI_CORE01(config)#vlan filter denyVLAN70 vlan-list 70
+
+</pre>
 
 
