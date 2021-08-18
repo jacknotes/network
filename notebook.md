@@ -45,7 +45,8 @@ SWI_CORE01#show track brief
 
 
 --cisco 3740E #20210818
-----配置vlan之间隔离
+----通过VACL方式实现vlan之间隔离
+vlan 70,vlan 10
 1. 配置访问控制列表，设置允许的条目
 SWI_CORE01(config)#ip access-list extended denyVLAN70
 SWI_CORE01(config-ext-nacl)#10 permit ip 192.168.17.0 0.0.0.255 192.168.10.0 0.0.0.255
@@ -59,6 +60,28 @@ SWI_CORE01(config-access-map)#action forward
 SWI_CORE01(config)#vlan internal allocation policy ascending
 4. 应用规则denyVLAN70到vlan 70
 SWI_CORE01(config)#vlan filter denyVLAN70 vlan-list 70
+
+----通过通过VLAN之间ACL方式实现vlan之间隔离
+Switch(config)# vlan 10 // 创建vlan 10
+Switch(config-vlan)# vlan 20
+Switch(config-vlan)# vlan 30
+Switch(config-vlan)# int vlan 10
+Switch(config-if)# ip address 192.168.10.1 255.255.255.0 // 配置vlan10虚端口IP
+Switch(config-if)# int vlan 20
+Switch(config-if)# ip address 192.168.20.1 255.255.255.0
+Switch(config-if)# int vlan 30
+Switch(config-if)# ip address 192.168.30.1 255.255.255.0
+******** 配置ACL ********
+Switch(config)# access-list 101 permit ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255
+Switch(config)# access-list 102 permit ip 192.168.20.0 0.0.0.255 192.168.30.0 0.0.0.255
+******** 应用ACL至VLAN端口 ********
+Switch(config)# int vlan 10
+Switch(config-if)# ip access-group 101 in
+Switch(config)# int vlan 20
+Switch(config-if)# ip access-group 102 in
+******** 完毕 ********
+注：在vlan间的acl中当源地址段为应用 vlan接口的ip段时，就是用in方向；当目的地址段为应用vlan接口的ip段时，就是用out方向
+注：一般情况下，通过VLAN之间ACL实现访问控制比较方便，但是当VLAN的端口比较分散时，采用VACL相对而言就要简单很多
 
 </pre>
 
