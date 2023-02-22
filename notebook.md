@@ -83,6 +83,41 @@ Switch(config-if)# ip access-group 102 in
 注：在vlan间的acl中当源地址段为应用 vlan接口的ip段时，就是用in方向；当目的地址段为应用vlan接口的ip段时，就是用out方向
 注：一般情况下，通过VLAN之间ACL实现访问控制比较方便，但是当VLAN的端口比较分散时，采用VACL相对而言就要简单很多
 
+
+### 20230209
+## 控制同一VLAN中IP地址互访
+access-list 101 permit ip host 192.168.13.200 host 192.168.13.111
+vlan access-map denyhost1 10	#配置PBR
+ action drop
+ match ip address 101
+vlan access-map denyhost1 20
+ action forward
+!
+vlan filter denyhost1 vlan-list 30		#应用PBR，此方法只控制同一个VLAN
+
+
+## 应用访问控制列表在vlan中
+Extended IP access list jackli
+    10 deny tcp host 172.168.2.219 host 172.16.30.100 eq 22 (109 matches)
+    50 deny icmp host 172.168.2.219 host 172.16.30.100 (251 matches)
+    100 permit ip any any (381 matches)
+SWI_CORE02(config)#interface vlan 90
+ip access-group jackli out		#应用策略在出方向
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </pre>
 
 
