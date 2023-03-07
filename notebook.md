@@ -1,6 +1,7 @@
 # cisco三层交换机常用案例
 
 
+
 ## 配置策略路由并应用到指定vlan--实验环境
 
 ```
@@ -44,7 +45,6 @@ interface vlan 10
 
 
 
-
 ## Cisco 3750交换机配置Response Time Report--生产环境
 ```
 SWI_CORE01(config)#ip sla 10 
@@ -61,7 +61,9 @@ SWI_CORE01(config)#ip route 119.23.85.229 255.255.255.255 192.168.10.253 track 1
 ```
 
 
+
 ## 通过VACL方式实现vlan之间隔离
+
 ```
 # 涉及的vlan
 vlan 70
@@ -96,7 +98,10 @@ vlan filter denyhost1 vlan-list 30		#应用PBR到VLAN列表
 ---------
 ```
 
+
+
 ## 通过VLAN之间ACL方式实现vlan之间隔离--实验环境
+
 ```
 # 配置vlan虚接口
 Switch(config)# vlan 10 
@@ -134,26 +139,5 @@ SWI_CORE02(config)#interface vlan 90
 ip access-group jackli out		#应用策略在出方向
 ----------
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</pre>
 
 
