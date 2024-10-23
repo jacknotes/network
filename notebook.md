@@ -259,7 +259,7 @@ ip route-static 192.168.21.0 255.255.255.0 192.168.104.8
 ip route-static 192.168.21.0 255.255.255.0 192.168.105.9 preference 70
 
 
-# 更换为nqa方式，在ensp上测试能实现路由冗余，但在现网环境中不能实现路由冗余
+# 更换为nqa方式，在ensp上测试能实现路由冗余，但在现网环境中不能实现路由冗余，因为参数不适应现网环境
 [csw-nqa-root-icmp]display this 
 nqa test-instance root icmp
  test-type icmp
