@@ -170,7 +170,9 @@ ffff0000 default  Y      debugging       Y      debugging     Y      debugging
 ```
 
 
-# 华为交换机配置mstp配置
+
+## 华为交换机配置mstp配置
+
 ```
 # [dsw3] 
 stp region-configuration
@@ -248,7 +250,9 @@ stp mode mstp
 ```
 
 
+
 ## 华为交换机配置nqa实现浮动路由
+
 ```
 # 在ensp上测试能实现路由冗余，但在现网环境中不能实现路由冗余 
 ip route-static 172.168.2.0 255.255.255.0 192.168.105.9
@@ -332,6 +336,102 @@ ip route-static 192.168.10.0 255.255.255.0 192.168.104.8 track nqa root icmp
 ip route-static 192.168.21.0 255.255.255.0 192.168.105.9 preference 70
 ip route-static 192.168.21.0 255.255.255.0 192.168.104.8 track nqa root icmp
 ```
+
+
+
+## 收集交换机日志到syslog
+
+```bash
+# 华为日志配置
+
+# 用户模式下手动配置时间
+clock timezone SH add 08:00:00
+clock datetime 13:57:00 2024-08-15
+
+# 配置模式下自动同步时间配置
+clock timezone SH add 08:00:00
+ntp-service unicast-server 203.107.6.88	# 执行2次
+ntp-service unicast-server 203.107.6.88
+
+# 查看时间
+[ASW1]display clock
+2024-08-15 15:55:21+08:00
+Thursday
+Time Zone(SH) : UTC+08:00
+
+# 配置日志
+info-center source default channel 2 log level debugging
+info-center loghost source Vlanif60
+info-center loghost 192.168.13.198 facility local7
+
+
+# 查看日志配置
+[ASW1]display current-configuration | include info-
+info-center source default channel 2 log level debugging
+info-center loghost source Vlanif60
+info-center loghost 192.168.13.198 facility local7
+
+
+
+
+# 华三日志配置
+
+# 配置模式下自动同步时间配置
+---- H3C S5048 配置ntp
+clock timezone SH add 08:00:00
+ntp-service enable  
+ntp-service unicast-server 203.107.6.88  
+clock protocol ntp
+---- H3C S5120-52P-LI 配置ntp
+ntp-service unicast-server 203.107.6.88 
+
+
+# 查看时间
+[UA-ASW07]display clock
+16:15:28.618 SH Thu 08/15/2024
+Time Zone : SH add 08:00:00
+
+# 配置日志
+---- H3C S5048 配置
+info-center source default loghost level debugging
+info-center loghost source Vlan-interface 20
+info-center loghost 192.168.13.198 facility local7
+-----H3C S5120-52P-LI 配置
+info-center source default channel 2 log level debugging
+info-center loghost source Vlan-interface 20
+info-center loghost 192.168.13.198 facility local7
+
+# 查看日志配置
+[UA-ASW07]display current-configuration | include info-
+ info-center loghost source Vlan-interface20
+ info-center loghost 192.168.13.198
+ info-center source default loghost level debugging
+```
+
+
+
+
+
+## 华为和华三交换机配置snmp
+
+```bash
+# 华为
+snmp-agent
+snmp-agent sys-info version v2c
+snmp-agent protocol source-interface vlanif 10
+snmp-agent community read G4axLE69
+snmp-agent trap enable
+snmp-agent target-host trap address udp-domain 192.168.13.236 params securityname G4axLE69 v2c
+
+# 华三
+snmp-agent
+snmp-agent sys-info version v2c
+snmp-agent community read G4axLE69
+snmp-agent trap enable
+snmp-agent target-host trap address udp-domain 192.168.13.236 params securityname G4axLE69 v2c
+```
+
+
 
 
 
