@@ -342,8 +342,7 @@ ip route-static 192.168.21.0 255.255.255.0 192.168.104.8 track nqa root icmp
 ## 收集交换机日志到syslog
 
 ```bash
-# 华为日志配置
-
+## 华为日志配置
 # 用户模式下手动配置时间
 clock timezone SH add 08:00:00
 clock datetime 13:57:00 2024-08-15
@@ -374,8 +373,7 @@ info-center loghost 192.168.13.198 facility local7
 
 
 
-# 华三日志配置
-
+## 华三日志配置
 # 配置模式下自动同步时间配置
 ---- H3C S5048 配置ntp
 clock timezone SH add 08:00:00
@@ -406,6 +404,40 @@ info-center loghost 192.168.13.198 facility local7
  info-center loghost source Vlan-interface20
  info-center loghost 192.168.13.198
  info-center source default loghost level debugging
+ 
+ 
+ 
+## 思科交换机
+# 配置用户名密码
+aaa new-model
+ username admin privilege 15 password YOU_PASSWORD
+ service password-encryption
+
+# 在vty模式下配置备用密码，如果不配置上面username admin，则思科交换机不会记录用户名和密码
+line vty 0 4
+ password YOU_PASSWORD
+ 
+# 开启登录的事件
+login on-success log
+login on-failure log
+
+# 配置命令审计，将会记录全局模式下修改的命令
+archive
+ log config
+  logging enable
+  logging size 1000
+  notify syslog contenttype plaintext
+  
+# 收集日志到syslog
+logging on
+logging 172.168.2.199
+logging console debugging
+logging monitor debugging
+logging buffered debugging
+logging trap debugging
+logging facility syslog
+logging source-interface Vlan102
+service timestamps log datetime msec
 ```
 
 
@@ -429,6 +461,10 @@ snmp-agent sys-info version v2c
 snmp-agent community read G4axLE69
 snmp-agent trap enable
 snmp-agent target-host trap address udp-domain 192.168.13.236 params securityname G4axLE69 v2c
+
+# 思科
+snmp-server community G4axLE69 RW
+snmp-server enable traps
 ```
 
 
